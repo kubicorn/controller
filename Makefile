@@ -22,6 +22,7 @@ container:
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_VERSION) \
 		-t $(REGISTRY)/$(TARGET):$(IMAGE_BRANCH) \
 		-t $(REGISTRY)/$(TARGET):$(GIT_REF) \
+	    -t $(REGISTRY)/$(TARGET):latest \
 		.
 
 run:
