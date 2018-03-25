@@ -16,6 +16,7 @@ all: compile install
 
 push: ## Push to the docker registry
 	$(DOCKER) push $(REGISTRY)/$(TARGET):$(GIT_REF)
+	$(DOCKER) push $(REGISTRY)/$(TARGET):latest
 
 clean: ## Clean the docker images
 	rm -f $(TARGET)
