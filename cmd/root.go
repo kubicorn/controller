@@ -31,14 +31,13 @@ var rootCmd = &cobra.Command{
 	Short: "The Kubicorn machine controller",
 	Long: `Run the Kubicorn controller to reconcile your infrastructure like the beautiful person you are.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-
-
-		// TODO @kris-nova
-		// We need to hack in here with the real control loop (once I write it...)
-		loop.RunService()
+		loop.RunService(so)
 	},
 }
+
+var (
+	so = &loop.ServiceOptions{}
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
