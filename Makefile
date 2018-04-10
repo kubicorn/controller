@@ -1,3 +1,7 @@
+ifndef VERBOSE
+	MAKEFLAGS += --silent
+endif
+
 TARGET = controller
 GOTARGET = github.com/kubicorn/$(TARGET)
 REGISTRY ?= kubicorn
@@ -9,6 +13,8 @@ GIT_VERSION ?= $(shell git describe --always --dirty)
 IMAGE_VERSION ?= $(shell git describe --always --dirty)
 IMAGE_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | sed 's/\///g')
 GIT_REF = $(shell git rev-parse --short=8 --verify HEAD)
+
+FMT_PKGS=$(shell go list -f {{.Dir}} ./... | grep -v vendor | tail -n +2)
 
 default: compile
 
@@ -40,6 +46,32 @@ compile: ## Compile the binary into bin/kubicorn-controller
 install: ## Create the kubicorn executable in $GOPATH/bin directory.
 	install -m 0755 bin/kubicorn-controller ${GOPATH}/bin/kubicorn-controller
 
+gofmt: install-tools ## Go fmt your code
+	echo "Fixing format of go files..."; \
+	for package in $(FMT_PKGS); \
+	do \
+		gofmt -w $$package ; \
+		goimports -l -w $$package ; \
+	done
+
+check-headers: ## Check if the headers are valid. This is ran in CI.
+	./scripts/check-header.sh
+
+.PHONY: check-code
+check-code: install-tools ## Run code checks
+	PKGS="${FMT_PKGS}" GOFMT="gofmt" GOLINT="golint" ./scripts/ci-checks.sh
+
 .PHONY: help
 help:  ## Show help messages for make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: install-tools
+install-tools:
+	GOIMPORTS_CMD=$(shell command -v goimports 2> /dev/null)
+ifndef GOIMPORTS_CMD
+	go get golang.org/x/tools/cmd/goimports
+endif
+	GOLINT_CMD=$(shell command -v golint 2> /dev/null)
+ifndef GOLINT_CMD
+	go get github.com/golang/lint/golint
+endif

@@ -15,16 +15,15 @@
 package loop
 
 import (
-	"github.com/kubicorn/kubicorn/pkg/logger"
 	"fmt"
+
+	"github.com/kubicorn/kubicorn/pkg/logger"
 )
 
 type ServiceOptions struct {
-
 }
 
 type Service struct {
-
 }
 
 func InitializeService(options *ServiceOptions) (*Service, error) {
