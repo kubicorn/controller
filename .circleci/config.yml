@@ -9,7 +9,6 @@ jobs:
 
     steps:
       - checkout
-      - setup_remote_docker
       - run:
           name: Check headers
           command: make check-headers
