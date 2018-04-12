@@ -1,4 +1,4 @@
-package machine
+package service
 
 import (
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -9,7 +9,14 @@ import (
 
 	"fmt"
 
+<<<<<<< HEAD:machine/machine.go
 	"github.com/kubicorn/controller/backoff"
+=======
+	"encoding/json"
+
+	"github.com/kubicorn/controller/backoff"
+	"github.com/kubicorn/kubicorn/apis/cluster"
+>>>>>>> Switching computers after work:service/machine.go
 	"github.com/kubicorn/kubicorn/pkg/logger"
 )
 
@@ -31,24 +38,49 @@ func ConcurrentReconcileMachines(cfg *ServiceConfiguration) chan error {
 				ch <- fmt.Errorf("Unable to list machines: %v", err)
 				continue
 			}
+			var name string
 			for _, machine := range machines.Items {
-				possibleMachine, err := mm.Get(machine.Name)
-				if err != nil {
-					ch <- fmt.Errorf("Unable to get machine [%s]: %v", machine.Name, err)
-					continue
-				}
-				if possibleMachine == nil {
+				exists := mm.Exists(machine.Name)
+				if !exists {
 					// Machine does not exist, create it
-					err := mm.Create(&machine)
+					id, err := mm.Create(&machine)
 					if err != nil {
 						ch <- fmt.Errorf("Unable to create machine [%s]: %v", machine.Name, err)
 						continue
 					}
+					pc := getProviderConfig(machine.Spec.ProviderConfig)
+					pc.ServerPool.Name = id
+					pcBytes, err := json.Marshal(pc)
+					if err != nil {
+						ch <- fmt.Errorf("Unable to marshal new provider config! %v", err)
+						continue
+					}
+					pcStr := string(pcBytes)
+					machine.Spec.ProviderConfig = pcStr
+					cm.client.Machines().Update(&machine)
 					logger.Debug("Created machine: %s", machine.Name)
 					continue
 				}
 				logger.Debug("Machine already exists: %s", machine.Name)
 			}
+			ids, err := mm.ListIDs(name)
+			if err != nil {
+				ch <- fmt.Errorf("Unable to list IDs: %v", err)
+				continue
+			}
+			for _, id := range ids {
+				found := false
+				for _, machine := range machines.Items {
+					pc := getProviderConfig(machine.Spec.ProviderConfig)
+					if pc.ServerPool.Name == id {
+						found = true
+					}
+				}
+				if !found {
+					mm.Destroy(id)
+				}
+			}
+
 		}
 	}()
 	return ch
@@ -81,4 +113,13 @@ func getClientMeta(cfg *ServiceConfiguration) (*crdClientMeta, error) {
 		clientset: cs,
 	}
 	return clientMeta, nil
+}
+
+func getProviderConfig(providerConfig string) *cluster.MachineProviderConfig {
+	logger.Info(providerConfig)
+	mp := cluster.MachineProviderConfig{
+		ServerPool: &cluster.ServerPool{},
+	}
+	json.Unmarshal([]byte(providerConfig), &mp)
+	return &mp
 }

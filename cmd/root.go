@@ -20,15 +20,24 @@ import (
 
 	"strings"
 
+<<<<<<< HEAD
 	"github.com/kubicorn/controller/loop"
 	"github.com/kubicorn/controller/machine"
 	"github.com/kubicorn/controller/machine/aws"
+=======
+	"github.com/kubicorn/controller/service"
+	"github.com/kubicorn/controller/service/aws"
+>>>>>>> Switching computers after work
 	"github.com/kubicorn/kubicorn/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
 var (
+<<<<<<< HEAD
 	cfg = &machine.ServiceConfiguration{}
+=======
+	cfg = &service.ServiceConfiguration{}
+>>>>>>> Switching computers after work
 	cp  string
 )
 
@@ -38,19 +47,54 @@ var rootCmd = &cobra.Command{
 	Short: "The Kubicorn machine controller",
 	Long:  `Run the Kubicorn controller to reconcile your infrastructure like the beautiful person you are.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if cfg.KubeConfigContent == "" {
-			logger.Critical("Required flag `kubeconfig-content` not set!")
-			os.Exit(99)
+		//
+		//
+		// Environmental Variables
+		//
+		//
+		kubeConfigContent := os.Getenv("KUBECONFIG_CONTENT")
+		if kubeConfigContent == "" {
+			logger.Critical("Missing environmental variable [KUBECONFIG_CONTENT]")
+			os.Exit(95)
 		}
-		cp = strings.ToLower(cp)
+		cfg.KubeConfigContent = kubeConfigContent
+		awsKey := os.Getenv("AWS_ACCESS_KEY_ID")
+		if awsKey == "" {
+			logger.Critical("Missing environmental variable [AWS_ACCESS_KEY_ID]")
+			os.Exit(94)
+		}
+		awsSecret := os.Getenv("AWS_SECRET_ACCESS_KEY")
+		if awsSecret == "" {
+			logger.Critical("Missing environmental variable [AWS_SECRET_ACCESS_KEY]")
+			os.Exit(93)
+		}
+		awsRegion := os.Getenv("AWS_REGION")
+		if awsRegion == "" {
+			logger.Critical("Missing environmental variable [AWS_REGION]")
+			os.Exit(92)
+		}
+		awsProfile := os.Getenv("AWS_PROFILE")
+		if awsProfile == "" {
+			logger.Info("Missing AWS_PROFILE using: DEFAULT")
+			awsProfile = "default"
+		}
 		//
 		//
 		// Cloud Provider Switch
 		//
 		//
+<<<<<<< HEAD
+=======
+		cp = strings.ToLower(cp)
+>>>>>>> Switching computers after work
 		switch cp {
 		case "aws":
-			cfg.CloudProvider = aws.New()
+			cp, err := aws.New(awsRegion, awsProfile)
+			if err != nil {
+				logger.Critical("Error loading SDK: %v", err)
+				os.Exit(91)
+			}
+			cfg.CloudProvider = cp
 		default:
 			err := fmt.Errorf("Invalid cloud provider string: %s", cp)
 			logger.Critical(err.Error())
@@ -61,7 +105,7 @@ var rootCmd = &cobra.Command{
 		// Run Service
 		//
 		//
-		machine.RunService(cfg)
+		service.RunService(cfg)
 	},
 }
 
@@ -80,14 +124,13 @@ func Execute() {
 
 func init() {
 
-	// TODO @kris-nova we need to support env vars for the kubeconfig content, and cloud provider auth information
-
+	//
+	//
+	// Flags
+	//
+	//
 	rootCmd.PersistentFlags().IntVarP(&logger.Level, "verbose", "v", 4, "Log level")
-	rootCmd.Flags().StringVarP(&cfg.KubeConfigContent, "kubeconfig-content", "k", "", "The content of the kubeconfig file to authenticate with.")
+	//rootCmd.Flags().StringVarP(&cfg.KubeConfigContent, "kubeconfig-content", "k", "", "The content of the kubeconfig file to authenticate with.")
 	rootCmd.Flags().StringVarP(&cp, "cloud-provider", "c", "aws", "The cloud provider string to use. Available options: aws")
-}
 
-func setCloudProvider(cfg *machine.ServiceConfiguration, name string) error {
-
-	return nil
 }

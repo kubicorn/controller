@@ -1,40 +1,34 @@
-// Copyright © 2017 The Kubicorn Authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package service
 
 import (
-	"fmt"
-
 	"github.com/kubicorn/kubicorn/pkg/logger"
 )
 
-type ServiceOptions struct {
-}
+func RunService(cfg *ServiceConfiguration) {
 
-type Service struct {
-}
-
-func InitializeService(options *ServiceOptions) (*Service, error) {
-	service := &Service{}
-	return service, nil
-}
-
-func RunService(options *ServiceOptions) error {
-	svc, err := InitializeService(options)
-	if err != nil {
-		return fmt.Errorf("Unable to initialize service: %v", err)
+<<<<<<< HEAD
+	logger.Info("Starting infinite loop...")
+	errchan := ConcurrentReconcileMachines(cfg)
+	for {
+		select {
+		case e1 := <-errchan:
+			logger.Warning(e1.Error())
+=======
+	logger.Info("Starting controller loop...")
+<<<<<<< HEAD:machine/service.go
+    errchan := ConcurrentReconcileMachines(cfg)
+    for {
+    	select {
+    	case e1 := <- errchan:
+    		logger.Warning(e1.Error())
+>>>>>>> more work on the controller
+=======
+	errchan := ConcurrentReconcileMachines(cfg)
+	for {
+		select {
+		case e1 := <-errchan:
+			logger.Warning(e1.Error())
+>>>>>>> Switching computers after work:service/service.go
+		}
 	}
-	logger.Info("Starting control loop...")
 }
