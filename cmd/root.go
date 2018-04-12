@@ -18,12 +18,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kubicorn/controller/service"
+	"strings"
+
+	"github.com/kubicorn/controller/loop"
+	"github.com/kubicorn/controller/machine"
+	"github.com/kubicorn/controller/machine/aws"
 	"github.com/kubicorn/kubicorn/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
-var cfg = &service.ServiceConfiguration{}
+var (
+	cfg = &machine.ServiceConfiguration{}
+	cp  string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -35,7 +42,26 @@ var rootCmd = &cobra.Command{
 			logger.Critical("Required flag `kubeconfig-content` not set!")
 			os.Exit(99)
 		}
-		service.RunService(cfg)
+		cp = strings.ToLower(cp)
+		//
+		//
+		// Cloud Provider Switch
+		//
+		//
+		switch cp {
+		case "aws":
+			cfg.CloudProvider = aws.New()
+		default:
+			err := fmt.Errorf("Invalid cloud provider string: %s", cp)
+			logger.Critical(err.Error())
+			os.Exit(97)
+		}
+		//
+		//
+		// Run Service
+		//
+		//
+		machine.RunService(cfg)
 	},
 }
 
@@ -54,7 +80,14 @@ func Execute() {
 
 func init() {
 
+	// TODO @kris-nova we need to support env vars for the kubeconfig content, and cloud provider auth information
+
 	rootCmd.PersistentFlags().IntVarP(&logger.Level, "verbose", "v", 4, "Log level")
 	rootCmd.Flags().StringVarP(&cfg.KubeConfigContent, "kubeconfig-content", "k", "", "The content of the kubeconfig file to authenticate with.")
+	rootCmd.Flags().StringVarP(&cp, "cloud-provider", "c", "aws", "The cloud provider string to use. Available options: aws")
+}
 
+func setCloudProvider(cfg *machine.ServiceConfiguration, name string) error {
+
+	return nil
 }

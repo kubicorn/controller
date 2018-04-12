@@ -16,11 +16,11 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/kubicorn/kubicorn/pkg/version"
 )
 
 var (
-	gitSha  string
-	version string
 	Unicorn = fmt.Sprintf(`-----------------------------------------------------------------------------------
                                                          ,/
                                                         //
@@ -63,6 +63,6 @@ var (
 
 ----[ %s ]--------------------------------------------
 
-Create, Manage, Image, and Scale Kubernetes infrastructure in the cloud.
-`, version, gitSha)
+Create, Manage, and Scale Kubernetes infrastructure in the cloud.
+`, version.GetVersion().Version, version.GetVersion().GitCommit)
 )

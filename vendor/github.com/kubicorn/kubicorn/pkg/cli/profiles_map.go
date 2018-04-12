@@ -160,4 +160,28 @@ var ProfileMapIndexed = map[string]ProfileMap{
 		ProfileFunc: packet.NewUbuntuCluster,
 		Description: "Ubuntu on Packet x86",
 	},
+
+	// -----------------------------------------------------------------------------------------------------------------
+	//
+	// Controller profiles
+	//
+	// -----------------------------------------------------------------------------------------------------------------
+
+	"controller-aws-ubuntu": {
+		ProfileFunc: amazon.NewControllerUbuntuCluster,
+		Description: "Controller Ubuntu on Amazon",
+	},
+
+	"caws": {
+		ProfileFunc: amazon.NewControllerUbuntuCluster,
+		Description: "Controller Ubuntu on Amazon",
+	},
+	"controller-do-ubuntu": {
+		ProfileFunc: digitalocean.NewControllerUbuntuCluster,
+		Description: "Controller Ubuntu on DigitalOcean",
+	},
+	"cdo": {
+		ProfileFunc: digitalocean.NewControllerUbuntuCluster,
+		Description: "Controller Ubuntu on DigitalOcean",
+	},
 }

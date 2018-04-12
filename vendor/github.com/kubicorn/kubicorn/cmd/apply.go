@@ -26,6 +26,8 @@ import (
 	"github.com/kubicorn/kubicorn/pkg/kubeconfig"
 	"github.com/kubicorn/kubicorn/pkg/local"
 	"github.com/kubicorn/kubicorn/pkg/logger"
+	"github.com/kubicorn/kubicorn/pkg/resourcedeploy"
+	"github.com/kubicorn/kubicorn/pkg/state/crd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/yuroyoro/swalker"
@@ -61,18 +63,12 @@ func ApplyCmd() *cobra.Command {
 
 	fs := applyCmd.Flags()
 
-	fs.StringVarP(&ao.StateStore, keyStateStore, "s", viper.GetString(keyStateStore), descStateStore)
-	fs.StringVarP(&ao.StateStorePath, keyStateStorePath, "S", viper.GetString(keyStateStorePath), descStateStorePath)
-	fs.StringVarP(&ao.Set, keyKubicornSet, "e", viper.GetString(keyKubicornSet), descSet)
+	bindCommonStateStoreFlags(&ao.StateStoreOptions, fs)
+	bindCommonAwsFlags(&ao.AwsOptions, fs)
 
+	fs.StringVarP(&ao.Set, keyKubicornSet, "e", viper.GetString(keyKubicornSet), descSet)
 	fs.StringVar(&ao.AwsProfile, keyAwsProfile, viper.GetString(keyAwsProfile), descAwsProfile)
 	fs.StringVar(&ao.GitRemote, keyGitConfig, viper.GetString(keyGitConfig), descGitConfig)
-	fs.StringVar(&ao.S3AccessKey, keyS3Access, viper.GetString(keyS3Access), descS3AccessKey)
-	fs.StringVar(&ao.S3SecretKey, keyS3Secret, viper.GetString(keyS3Secret), descS3SecretKey)
-	fs.StringVar(&ao.BucketEndpointURL, keyS3Endpoint, viper.GetString(keyS3Endpoint), descS3Endpoints)
-	fs.StringVar(&ao.BucketName, keyS3Bucket, viper.GetString(keyS3Bucket), descS3Bucket)
-
-	fs.BoolVar(&ao.BucketSSL, keyS3SSL, viper.GetBool(keyS3SSL), descS3SSL)
 
 	return applyCmd
 }
@@ -153,9 +149,27 @@ func runApply(options *cli.ApplyOptions) error {
 	}
 
 	logger.Info("Updating state store for cluster [%s]", options.Name)
-
+	logger.Info("Hanging while fetching kube config...")
 	if err = kubeconfig.RetryGetConfig(newCluster); err != nil {
 		return fmt.Errorf("Unable to write kubeconfig: %v", err)
+	}
+
+	if newCluster.ControllerDeployment != nil {
+		// -------------------------------------------------------------------------------------------------------------
+		//
+		// Here is where we hook in for the new controller logic
+		// This is exclusive to profiles that have a controller defined
+		//
+		logger.Info("Deploying cluster controller: %s", newCluster.ControllerDeployment.Spec.Template.Spec.Containers[0].Image)
+		err := resourcedeploy.DeployClusterControllerDeployment(newCluster)
+		if err != nil {
+			return fmt.Errorf("Unable to deploy cluster controller: %v", err)
+		}
+		crdStateStore := crd.NewCRDStore(&crd.CRDStoreOptions{
+			BasePath:    options.StateStorePath,
+			ClusterName: options.Name,
+		})
+		crdStateStore.Commit(newCluster)
 	}
 
 	logger.Always("The [%s] cluster has applied successfully!", newCluster.Name)

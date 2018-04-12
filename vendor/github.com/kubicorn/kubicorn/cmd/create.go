@@ -63,19 +63,13 @@ func CreateCmd() *cobra.Command {
 
 	fs := createCmd.Flags()
 
-	fs.StringVarP(&co.StateStore, keyStateStore, "s", viper.GetString(keyStateStore), descStateStore)
-	fs.StringVarP(&co.StateStorePath, keyStateStorePath, "S", viper.GetString(keyStateStorePath), descStateStorePath)
+	bindCommonStateStoreFlags(&co.StateStoreOptions, fs)
+	bindCommonAwsFlags(&co.AwsOptions, fs)
+
 	fs.StringVarP(&co.Profile, keyProfile, "p", viper.GetString(keyProfile), descProfile)
 	fs.StringVarP(&co.CloudID, keyCloudID, "c", viper.GetString(keyCloudID), descCloudID)
 	fs.StringVarP(&co.Set, keySet, "e", viper.GetString(keySet), descSet)
 	fs.StringVarP(&co.GitRemote, keyGitConfig, "g", viper.GetString(keyGitConfig), descGitConfig)
-
-	fs.StringVar(&co.S3AccessKey, keyS3Access, viper.GetString(keyS3Access), descS3AccessKey)
-	fs.StringVar(&co.S3SecretKey, keyS3Secret, viper.GetString(keyS3Secret), descS3SecretKey)
-	fs.StringVar(&co.BucketEndpointURL, keyS3Endpoint, viper.GetString(keyS3Endpoint), descS3Endpoints)
-	fs.StringVar(&co.BucketName, keyS3Bucket, viper.GetString(keyS3Bucket), descS3Bucket)
-
-	fs.BoolVar(&co.BucketSSL, keyS3SSL, viper.GetBool(keyS3SSL), descS3SSL)
 
 	flagApplyAnnotations(createCmd, "profile", "__kubicorn_parse_profiles")
 	flagApplyAnnotations(createCmd, "cloudid", "__kubicorn_parse_cloudid")
@@ -115,7 +109,10 @@ func RunCreate(options *cli.CreateOptions) error {
 	if newCluster.ProviderConfig().Cloud == cluster.CloudGoogle && options.CloudID == "" {
 		return fmt.Errorf("CloudID is required for google cloud. Please set it to your project ID")
 	}
-	newCluster.ProviderConfig().CloudId = options.CloudID
+
+	providerConfig := newCluster.ProviderConfig()
+	providerConfig.CloudId = options.CloudID
+	newCluster.SetProviderConfig(providerConfig)
 
 	// Expand state store path
 	// Todo (@kris-nova) please pull this into a filepath package or something
