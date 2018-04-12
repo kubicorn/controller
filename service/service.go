@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package loop
+package service
 
 import (
 	"fmt"
@@ -37,8 +37,4 @@ func RunService(options *ServiceOptions) error {
 		return fmt.Errorf("Unable to initialize service: %v", err)
 	}
 	logger.Info("Starting control loop...")
-	for {
-		safeState := AtomicGetState()
-		safeState.AtomicEnsureAttempt(svc)
-	}
 }

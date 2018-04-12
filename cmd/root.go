@@ -18,12 +18,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kubicorn/controller/loop"
+	"github.com/kubicorn/controller/service"
 	"github.com/kubicorn/kubicorn/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
+var cfg = &service.ServiceConfiguration{}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -31,7 +31,11 @@ var rootCmd = &cobra.Command{
 	Short: "The Kubicorn machine controller",
 	Long:  `Run the Kubicorn controller to reconcile your infrastructure like the beautiful person you are.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loop.RunService(so)
+		if cfg.KubeConfigContent == "" {
+			logger.Critical("Required flag `kubeconfig-content` not set!")
+			os.Exit(99)
+		}
+		service.RunService(cfg)
 	},
 }
 
@@ -51,5 +55,6 @@ func Execute() {
 func init() {
 
 	rootCmd.PersistentFlags().IntVarP(&logger.Level, "verbose", "v", 4, "Log level")
+	rootCmd.Flags().StringVarP(&cfg.KubeConfigContent, "kubeconfig-content", "k", "", "The content of the kubeconfig file to authenticate with.")
 
 }
