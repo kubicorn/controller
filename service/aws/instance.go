@@ -25,7 +25,7 @@ type AWSMachine struct {
 
 var (
 	infrastructureMutex            sync.Mutex
-	checkForExistsAfterCreateCount = 25
+	checkForExistsAfterCreateCount = 225
 )
 
 func New(region string, profile string) (service.MachineMutation, error) {
