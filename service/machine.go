@@ -40,6 +40,7 @@ func ConcurrentReconcileMachines(cfg *ServiceConfiguration) chan error {
 			}
 			var name string
 			for _, machine := range machines.Items {
+				//pc := getProviderConfig(machine.Spec.ProviderConfig)
 				exists := mm.Exists(machine.Name)
 				if !exists {
 					// Machine does not exist, create it
@@ -116,7 +117,7 @@ func getClientMeta(cfg *ServiceConfiguration) (*crdClientMeta, error) {
 }
 
 func getProviderConfig(providerConfig string) *cluster.MachineProviderConfig {
-	logger.Info(providerConfig)
+	//logger.Info(providerConfig)
 	mp := cluster.MachineProviderConfig{
 		ServerPool: &cluster.ServerPool{},
 	}

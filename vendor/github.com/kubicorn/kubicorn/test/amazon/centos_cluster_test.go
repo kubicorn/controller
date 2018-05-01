@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ubuntu
+package amazon
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ import (
 	"github.com/kris-nova/charlie/network"
 	"github.com/kubicorn/kubicorn/apis/cluster"
 	"github.com/kubicorn/kubicorn/pkg/logger"
-	profile "github.com/kubicorn/kubicorn/profiles/digitalocean"
+	profile "github.com/kubicorn/kubicorn/profiles/amazon"
 	"github.com/kubicorn/kubicorn/test"
 )
 
@@ -41,10 +41,10 @@ func TestMain(m *testing.M) {
 	//	}
 	//}()
 	test.InitRsaTravis()
-	testCluster = profile.NewUbuntuCluster("ubuntu-test")
+	testCluster = profile.NewCentosCluster("centos-test")
 	testCluster, err = test.Create(testCluster)
 	if err != nil {
-		fmt.Printf("Unable to create DigitalOcean test cluster: %v\n", err)
+		fmt.Printf("Unable to create Amazon test cluster: %v\n", err)
 		os.Exit(1)
 	}
 	status := m.Run()

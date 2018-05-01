@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"sync"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -46,14 +48,19 @@ func (a *AWSMachine) Create(machine *clusterv1.Machine) (string, error) {
 	infrastructureMutex.Lock()
 	defer infrastructureMutex.Unlock()
 	pc := getProviderConfig(machine.Spec.ProviderConfig)
-	userData := ""
+	spl := strings.Split(pc.Name, ".")
+	clusterName := spl[0]
+	logger.Info(pc.ServerPool.Image)
+	if pc.ServerPool.Image == "" {
+		return "", nil
+	}
 	input := &ec2.RunInstancesInput{
-		ImageId:      aws.String("imageid"),
-		InstanceType: aws.String("size"),
+		ImageId:      aws.String(pc.ServerPool.Image),
+		InstanceType: aws.String(pc.ServerPool.Size),
 		MinCount:     aws.Int64(1),
 		MaxCount:     aws.Int64(1),
-		KeyName:      aws.String("ssh key"),
-		UserData:     &userData,
+		KeyName:      aws.String(clusterName),
+		UserData:     aws.String(string(pc.ServerPool.GeneratedNodeUserData)),
 	}
 	output, err := a.EC2.RunInstances(input)
 	if err != nil {
@@ -80,12 +87,21 @@ func (a *AWSMachine) Create(machine *clusterv1.Machine) (string, error) {
 	return *output.Instances[0].InstanceId, nil
 }
 
-func (a *AWSMachine) Exists(id string) bool {
+func (a *AWSMachine) Exists(name string) bool {
+	if name == "" {
+		logger.Info("Empty name")
+		return true
+	}
 	infrastructureMutex.Lock()
 	defer infrastructureMutex.Unlock()
 	input := &ec2.DescribeInstancesInput{
-		InstanceIds: []*string{
-			&id,
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("tag:Name"),
+				Values: []*string{
+					aws.String(name),
+				},
+			},
 		},
 	}
 	output, err := a.EC2.DescribeInstances(input)
@@ -94,6 +110,11 @@ func (a *AWSMachine) Exists(id string) bool {
 		// If there is an error we want to assume it exists so we don't take action
 		return true
 	}
+	if len(output.Reservations) < 1 {
+		return true
+	}
+
+	// TODO we assume that we have reservations
 	if len(output.Reservations[0].Instances) > 1 {
 		return true
 	}
@@ -119,7 +140,7 @@ func (a *AWSMachine) ListIDs(name string) ([]string, error) {
 	input := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
 			{
-				Name: aws.String("KubicornCluster"),
+				Name: aws.String("tag:KubicornCluster"),
 				Values: []*string{
 					aws.String(name),
 				},
@@ -138,7 +159,7 @@ func (a *AWSMachine) ListIDs(name string) ([]string, error) {
 }
 
 func getProviderConfig(providerConfig string) *cluster.MachineProviderConfig {
-	logger.Info(providerConfig)
+	//logger.Info(providerConfig)
 	mp := cluster.MachineProviderConfig{
 		ServerPool: &cluster.ServerPool{},
 	}

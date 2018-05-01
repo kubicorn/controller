@@ -16,23 +16,14 @@ package cli
 
 // Options represents command options.
 type Options struct {
-	StateStoreOptions
-	Name       string
-	CloudID    string
-	Set        string
-	AwsProfile string
-	GitRemote  string
-	AwsOptions
-}
-
-//StateStoreOptions
-type StateStoreOptions struct {
 	StateStore     string
 	StateStorePath string
-}
+	Name           string
+	CloudID        string
+	Set            string
+	AwsProfile     string
+	GitRemote      string
 
-// AWS Options
-type AwsOptions struct {
 	S3AccessKey       string
 	S3SecretKey       string
 	BucketEndpointURL string
