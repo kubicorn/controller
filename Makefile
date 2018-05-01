@@ -46,6 +46,9 @@ compile: ## Compile the binary into bin/kubicorn-controller
 install: ## Create the kubicorn executable in $GOPATH/bin directory.
 	install -m 0755 bin/kubicorn-controller ${GOPATH}/bin/kubicorn-controller
 
+update-headers: ## Update the headers in the repository. Required for all new files.
+	./scripts/headers.sh
+
 gofmt: install-tools ## Go fmt your code
 	echo "Fixing format of go files..."; \
 	for package in $(FMT_PKGS); \
