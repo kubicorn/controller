@@ -9,13 +9,14 @@ SHELL_IMAGE=golang:1.8.3
 GIT_SHA=$(shell git rev-parse --verify HEAD)
 VERSION=$(shell cat VERSION)
 PWD=$(shell pwd)
+GOBUILD=go build -o bin/kubicorn -ldflags "-X github.com/kubicorn/kubicorn/pkg/version.GitSha=${GIT_SHA} -X github.com/kubicorn/kubicorn/pkg/version.KubicornVersion=${VERSION}"
 
 default: authorsfile compile ## Parse Bootstrap scripts and create kubicorn executable in the ./bin directory and the AUTHORS file.
 
 all: default install
 
 compile: ## Create the kubicorn executable in the ./bin directory.
-	go build -o bin/kubicorn -ldflags "-X github.com/kubicorn/kubicorn/cmd.GitSha=${GIT_SHA} -X github.com/kubicorn/kubicorn/cmd.Version=${VERSION}" main.go
+	${GOBUILD} main.go
 
 install: ## Create the kubicorn executable in $GOPATH/bin directory.
 	install -m 0755 bin/kubicorn ${GOPATH}/bin/kubicorn
@@ -54,16 +55,16 @@ build-linux-amd64: ## Create the kubicorn executable for Linux 64-bit OS in the 
 	--rm golang:1.8.1 make docker-build-linux-amd64
 
 docker-build-linux-amd64:
-	go build -v -o bin/linux-amd64
+	${GOBUILD} -o bin/linux-amd64
 
 build-darwin-amd64: ## Create the kubicorn executable for Darwin (osX) 64-bit OS in the ./bin directory. Requires Docker.
-	GOOS=darwin GOARCH=amd64 go build -v -o bin/darwin-amd64 &
+	GOOS=darwin GOARCH=amd64 ${GOBUILD} -o bin/darwin-amd64 &
 
 build-freebsd-amd64: ## Create the kubicorn executable for FreeBSD 64-bit OS in the ./bin directory. Requires Docker.
-	GOOS=freebsd GOARCH=amd64 go build -v -o bin/freebsd-amd64 &
+	GOOS=freebsd GOARCH=amd64${GOBUILD} -o bin/freebsd-amd64 &
 
 build-windows-amd64: ## Create the kubicorn executable for Windows 64-bit OS in the ./bin directory. Requires Docker.
-	GOOS=windows GOARCH=amd64 go build -v -o bin/windows-amd64 &
+	GOOS=windows GOARCH=amd64${GOBUILD} -o bin/windows-amd64 &
 
 linux: shell
 shell: ## Exec into a container with the kubicorn source mounted inside
@@ -82,6 +83,26 @@ bashlint:
 	else \
 	 echo shellcheck not installed. try something like: apt-get install shellcheck; \
 	fi
+
+# bootstrap scripts
+# located in the kubicorn/bootstrap repository
+.PHONY: bootstrap
+bootstrap: ## create a submodule for bootstrap scripts
+	git submodule deinit -f -- bootstrap
+	rm -rf .git/modules/bootstrap
+	git rm -rf bootstrap
+	git submodule add git@github.com:kubicorn/bootstrap.git bootstrap
+	git submodule init
+	git submodule update
+	git --git-dir ./bootstrap/.git checkout origin/${VERSION}
+
+.PHONY: bootstrap-master
+bootstrap-master:
+	git --git-dir ./bootstrap/.git checkout origin/master
+
+.PHONY: bootstrap-version
+bootstrap-version:
+	git --git-dir ./bootstrap/.git checkout origin/${VERSION}
 
 # versioning
 bump-major:
