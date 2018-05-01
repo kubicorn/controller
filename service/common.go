@@ -95,8 +95,7 @@ func ConcurrentReconcileMachines(cfg *ServiceConfiguration) chan error {
 				name = spl[0]
 			}
 			names, err := mm.ListIDs(name)
-			logger.Always("%+v
-", names)
+			logger.Always("%+v", names)
 			if err != nil {
 				ch <- fmt.Errorf("Unable to list IDs: %v", err)
 				continue

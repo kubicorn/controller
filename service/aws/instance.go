@@ -69,10 +69,9 @@ func (a *AWSMachine) Create(machine *clusterv1.Machine) (string, error) {
 	if pc.ServerPool.Image == "" {
 		return "", nil
 	}
-	logger.Debug("AMI: %s
-", pc.ServerPool.Image)
-	logger.Debug("KeyPair: %s
-", clusterName)
+
+	logger.Debug("AMI: %s", pc.ServerPool.Image)
+	logger.Debug("KeyPair: %s", clusterName)
 
 	// Calculate Security Groups
 	var sgs []*string
