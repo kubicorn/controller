@@ -9,16 +9,12 @@ import (
 
 	"fmt"
 
-<<<<<<< HEAD:machine/machine.go
-	"github.com/kubicorn/controller/backoff"
-=======
 	"encoding/json"
 
 	"strings"
 
 	"github.com/kubicorn/controller/backoff"
 	"github.com/kubicorn/kubicorn/apis/cluster"
->>>>>>> Switching computers after work:service/machine.go
 	"github.com/kubicorn/kubicorn/pkg/logger"
 )
 

@@ -1,4 +1,4 @@
-// Copyright © 2017 The Kubicorn Authors
+// Copyright © 2018 The Kubicorn Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,24 +20,14 @@ import (
 
 	"strings"
 
-<<<<<<< HEAD
-	"github.com/kubicorn/controller/loop"
-	"github.com/kubicorn/controller/machine"
-	"github.com/kubicorn/controller/machine/aws"
-=======
 	"github.com/kubicorn/controller/service"
 	"github.com/kubicorn/controller/service/aws"
->>>>>>> Switching computers after work
 	"github.com/kubicorn/kubicorn/pkg/logger"
 	"github.com/spf13/cobra"
 )
 
 var (
-<<<<<<< HEAD
-	cfg = &machine.ServiceConfiguration{}
-=======
 	cfg = &service.ServiceConfiguration{}
->>>>>>> Switching computers after work
 	cp  string
 )
 
@@ -83,10 +73,7 @@ var rootCmd = &cobra.Command{
 		// Cloud Provider Switch
 		//
 		//
-<<<<<<< HEAD
-=======
 		cp = strings.ToLower(cp)
->>>>>>> Switching computers after work
 		switch cp {
 		case "aws":
 			cp, err := aws.New(awsRegion, awsProfile)
@@ -108,10 +95,6 @@ var rootCmd = &cobra.Command{
 		service.RunService(cfg)
 	},
 }
-
-var (
-	so = &loop.ServiceOptions{}
-)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
