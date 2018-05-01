@@ -14,11 +14,25 @@ import (
 =======
 	"encoding/json"
 
+	"strings"
+
 	"github.com/kubicorn/controller/backoff"
 	"github.com/kubicorn/kubicorn/apis/cluster"
 >>>>>>> Switching computers after work:service/machine.go
 	"github.com/kubicorn/kubicorn/pkg/logger"
 )
+
+func RunService(cfg *ServiceConfiguration) {
+
+	logger.Info("Starting controller loop...")
+	errchan := ConcurrentReconcileMachines(cfg)
+	for {
+		select {
+		case e1 := <-errchan:
+			logger.Warning(e1.Error())
+		}
+	}
+}
 
 func ConcurrentReconcileMachines(cfg *ServiceConfiguration) chan error {
 	ch := make(chan error)
@@ -49,8 +63,12 @@ func ConcurrentReconcileMachines(cfg *ServiceConfiguration) chan error {
 						ch <- fmt.Errorf("Unable to create machine [%s]: %v", machine.Name, err)
 						continue
 					}
+					logger.Info("New machine id: %s", id)
 					pc := getProviderConfig(machine.Spec.ProviderConfig)
-					pc.ServerPool.Name = id
+					//
+					// Here we can update the ProviderConfig
+					// pc.ServerPool.Name = id
+
 					pcBytes, err := json.Marshal(pc)
 					if err != nil {
 						ch <- fmt.Errorf("Unable to marshal new provider config! %v", err)
@@ -63,22 +81,25 @@ func ConcurrentReconcileMachines(cfg *ServiceConfiguration) chan error {
 					continue
 				}
 				logger.Debug("Machine already exists: %s", machine.Name)
+				spl := strings.Split(machine.Name, ".")
+				name = spl[0]
 			}
-			ids, err := mm.ListIDs(name)
+			names, err := mm.ListIDs(name)
+			logger.Always("%+v\n", names)
 			if err != nil {
 				ch <- fmt.Errorf("Unable to list IDs: %v", err)
 				continue
 			}
-			for _, id := range ids {
+			for _, n := range names {
 				found := false
 				for _, machine := range machines.Items {
-					pc := getProviderConfig(machine.Spec.ProviderConfig)
-					if pc.ServerPool.Name == id {
+					//pc := getProviderConfig(machine.Spec.ProviderConfig)
+					if machine.Name == n {
 						found = true
 					}
 				}
 				if !found {
-					mm.Destroy(id)
+					mm.Destroy(n)
 				}
 			}
 
